@@ -1,0 +1,12 @@
+groups:
+- name: WebAPI
+  rules:
+  - alert: WebAPITaxaAlta
+    expr: rate(flask_http_request_duration_seconds_count{status="200"}[30s]) > 1.2
+    for: 30s
+    labels:
+      team: developers-api
+      env: prod
+    annotations:
+      title: Numero alto de requisições
+      desc: API Beers está recebendo um número muito alto de requisições.

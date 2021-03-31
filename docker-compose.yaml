@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+  api:
+    image: moroleandro/test-cerveja
+    ports:
+      - "8080:5000"
+    networks:
+      - default
+    depends_on:
+      - mongodb
+    environment:
+      MONGODB_HOST: "mongodb"
+      MONGODB_USERNAME: "mongouser"
+      MONGODB_PASSWORD: "mongopwd"
+    
+  mongodb:
+    image: mongo:4.1
+    networks:
+      - default
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "mongouser"
+      MONGO_INITDB_ROOT_PASSWORD: "mongopwd"
+    
+  prometheus:
+    image: prom/prometheus:v2.24.1
+    volumes: 
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+      - ./alerts.rules.yaml:/etc/prometheus/alerts.rules
+    ports:
+      - "9090:9090"
+    networks:
+      - default
+    depends_on:
+      - api
+    
+  alertmanager:
+    image: prom/alertmanager:v0.21.0
+    volumes:
+      - "./alertmanager.yaml:/prometheus/alertmanager.yml"
+    command:
+      - "--config.file=/prometheus/alertmanager.yml"
+    ports:
+      - "9093:9093"
+    networks:
+      - default
+    depends_on:
+      - api
+    
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
